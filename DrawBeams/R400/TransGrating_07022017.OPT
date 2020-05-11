@@ -1,0 +1,6 @@
+3 surfaces TransGrating.OPT
+Index        Z        Type     Gx,mm      Order      Diam
+---------:---.----:---------:----.---- :----------:---------
+    1    :57.7    :Lens     :  400     :    1     :  50
+1.0      :57.8    :Lens     :          :          :  50
+         :115.5   : CCD     :          :          :  76
