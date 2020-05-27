@@ -4,10 +4,10 @@ Simulation of Optics with Beamfour software
 - author : Sylvie Dagoret-Campagne
 - affiliation : IJCLab/IN2P3/CNRS
 - creation date : Feb 7th 2017
-- update : May 2020 to produce figures of article
+- update : 27 May 2020 to produce figures of article
 
 
-## Work in 2017:
+## Work in 2017: (deprecated)
 
 ### MakeBeams/ : generate converging beam for BeamFour
 
@@ -24,11 +24,18 @@ Simulation of Optics with Beamfour software
 	
 ## Work in 2020	: for paper
 
-### MyHOLO2020/	: definition of Hologram for Beam4		
+### MakeBeams : ---> Updated BeamGenerator for CTIO
+
+### MyHOLO2020/	: definition of Hologram for Beam4	---> Deprecated already	
 	
 ### DrawBeams/ : Drawing beams longitudinally
-### Defocus/	 : Show the defocus		
-### DrawPSF/	 : draw the PSF		
+ - directories HOE;R400,R350,R200 to be used to generate BeamFour file
+ - notebook_draw : notebook to draw beam
+
+### Defocus/	 : Show the defocus	
+- notebook to show longitudinal defocusing	
+### DrawPSF/	 : draw the PSF
+- notebooks to show PSF in transverse plane.		
 		
 		
 		
