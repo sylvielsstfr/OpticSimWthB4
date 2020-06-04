@@ -1,3 +1,12 @@
+#######################################################
+# Interpolate the PSF within the simulated ray grid
+#
+# - author : Sylvie Dagoret-Campagne
+# - affiliation : IJCLab/IN2P3/CNRS
+# - creation date : June 4rd 2020
+#
+#######################################################
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -148,11 +157,12 @@ df_R350=df_R350.iloc[0:NBTOT]
 
 # Selection of input
 
-FLAG_R400 = True
+FLAG_R400 = False
 FLAG_R300 = False
 FLAG_R350 = False
 FLAG_R200 = False
-FLAG_HOE = False
+FLAG_HOE = True
+FLAG_PLOT =False
 
 if FLAG_R400:
     df = df_R400
@@ -200,42 +210,44 @@ RMAX=np.max(np.array([RXMAX,RYMAX]))
 def Select_Beam(row):
     return (row["X0"]-X0C)**2+(row["Y0"]-Y0C)**2 <= RMAX**2
 
-# Figure 1 : Show input beam
-#-----------------------------
-f, ((ax1, ax2)) = plt.subplots(1, 2,figsize=(10,5),sharex=True,sharey=True)
-df.plot.scatter(x="X0", y="Y0",c="DarkBlue",marker="o",ax=ax1)
-ax1.set_aspect("equal")
-ax1.grid()
+if FLAG_PLOT:
+    # Figure 1 : Show input beam
+    #-----------------------------
+    f, ((ax1, ax2)) = plt.subplots(1, 2,figsize=(10,5),sharex=True,sharey=True)
+    df.plot.scatter(x="X0", y="Y0",c="DarkBlue",marker="o",ax=ax1)
+    ax1.set_aspect("equal")
+    ax1.grid()
 
-q = ax2.quiver(df["X0"], df["Y0"], df["U0"], df["V0"],color="red")
-ax2.set_aspect("equal")
-ax2.set_xlabel("X0 (mm)")
-ax2.grid()
-plt.suptitle("Unfiltered square beam")
-plt.show()
+    q = ax2.quiver(df["X0"], df["Y0"], df["U0"], df["V0"],color="red")
+    ax2.set_aspect("equal")
+    ax2.set_xlabel("X0 (mm)")
+    ax2.grid()
+    plt.suptitle("Unfiltered square beam")
+    plt.show()
 
 ###############################################################
 # Beam rays resampling
 ##############################################################
 WLSIM=np.array([0.0004,0.0006,0.0008,0.001]) # all simulated wavelength in mm
-#NSIMRAYS=200000  # number or rays to resample
-NSIMRAYS=2000  # number or rays to resample
+NSIMRAYS=100000  # number or rays to resample
+#NSIMRAYS=2000  # number or rays to resample
 
 SIMRAYS_COORDINATES=(np.random.random((NSIMRAYS,2))-0.5)*2*RMAX
 simrays_sel_idx=np.where(SIMRAYS_COORDINATES[:,0]**2+SIMRAYS_COORDINATES[:,1]**2<(RMAX)**2)[0]
 SIMRAYSSEL_COORDINATES = SIMRAYS_COORDINATES[simrays_sel_idx]
 NBSIMRAYSSEL=len(SIMRAYSSEL_COORDINATES)
 
-## Figure for resampling
-f, ax = plt.subplots(figsize=(5,5))
-ax.scatter(SIMRAYSSEL_COORDINATES[:,0],SIMRAYSSEL_COORDINATES[:,1],marker="o" ,color="DarkBlue",s=5)
-ax.scatter(df["X0"].values, df["Y0"],marker="o" ,color="red",s=50)
-ax.grid()
-ax.set_aspect("auto")
-ax.set_xlabel("X mm")
-ax.set_ylabel("Y mm")
-ax.set_title(" Random beam")
-plt.show()
+if FLAG_PLOT:
+    ## Figure for resampling
+    f, ax = plt.subplots(figsize=(5,5))
+    ax.scatter(SIMRAYSSEL_COORDINATES[:,0],SIMRAYSSEL_COORDINATES[:,1],marker="o" ,color="DarkBlue",s=5)
+    ax.scatter(df["X0"].values, df["Y0"],marker="o" ,color="red",s=50)
+    ax.grid()
+    ax.set_aspect("auto")
+    ax.set_xlabel("X mm")
+    ax.set_ylabel("Y mm")
+    ax.set_title(" Random beam")
+    plt.show()
 
 
 
@@ -245,34 +257,35 @@ all_Yccd=[]
 #  LOOP on wavelength
 ########
 for WL in WLSIM:
-    print("WL=",WL)
+    print("********** WL = {} ********** ".format(WL))
     df_SIM = df.loc[df.wave == WL]
 
     NBEAMS = len(df_SIM)
 
-    jet = plt.get_cmap('jet')
-    cNorm = colors.Normalize(vmin=0, vmax=NBEAMS)
-    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-    all_colors = scalarMap.to_rgba(np.arange(NBEAMS), alpha=1)
+    if FLAG_PLOT:
+        jet = plt.get_cmap('jet')
+        cNorm = colors.Normalize(vmin=0, vmax=NBEAMS)
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        all_colors = scalarMap.to_rgba(np.arange(NBEAMS), alpha=1)
 
 
-    f, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 5))
-    df_SIM.plot.scatter(x="X2", y="Y2", c=all_colors, marker="o", ax=ax1, s=50)
-    ax1.set_aspect("equal")
-    ax1.grid()
-    title1 = "Rays at {}".format(disperser_name)
-    ax1.set_title(title1)
+        f, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 5))
+        df_SIM.plot.scatter(x="X2", y="Y2", c=all_colors, marker="o", ax=ax1, s=50)
+        ax1.set_aspect("equal")
+        ax1.grid()
+        title1 = "Rays at {}".format(disperser_name)
+        ax1.set_title(title1)
 
-    df_SIM.plot.scatter(x="X3", y="Y3", c=all_colors, marker="o", ax=ax2, s=50)
-    ax2.set_aspect("equal")
-    ax2.grid()
-    title2 = "{} : CCD $\\lambda$ = {} nm".format(disperser_name, WL * mm_to_nm)
-    ax2.set_title(title2)
+        df_SIM.plot.scatter(x="X3", y="Y3", c=all_colors, marker="o", ax=ax2, s=50)
+        ax2.set_aspect("equal")
+        ax2.grid()
+        title2 = "{} : CCD $\\lambda$ = {} nm".format(disperser_name, WL * mm_to_nm)
+        ax2.set_title(title2)
 
-    title="{} : $\lambda$ = {}$ nm".format(disperser_name,WL*mm_to_nm)
-    plt.suptitle(title, Y=1.1, fontsize=25)
-    plt.tight_layout()
-    plt.show()
+        title="{} : $\lambda$ = {}$ nm".format(disperser_name,WL*mm_to_nm)
+        plt.suptitle(title, Y=1.1, fontsize=25)
+        plt.tight_layout()
+        plt.show()
 
 
 
@@ -297,6 +310,11 @@ for WL in WLSIM:
     Yccd = np.zeros(NBSIMRAYSSEL)
 
     for idx in np.arange(NBSIMRAYSSEL):
+
+        if idx%10000==0:
+            print("\t - WL = {} , sim ray beam = {}".format(WL,idx))
+
+
         dd = distances[idx]
         indrays = indices[idx]
 
@@ -318,25 +336,25 @@ for WL in WLSIM:
     all_Xccd.append(Xccd)
     all_Yccd.append(Yccd)
 
+    if FLAG_PLOT:
+        f, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
+        NBINX = (Xccd.max() - Xccd.min()) / (Det_xpic * micr_to_mm)
+        NBINY = (Yccd.max() - Yccd.min()) / (Det_xpic * micr_to_mm)
 
-    f, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
-    NBINX = (Xccd.max() - Xccd.min()) / (Det_xpic * micr_to_mm)
-    NBINY = (Yccd.max() - Yccd.min()) / (Det_xpic * micr_to_mm)
+        ax1.scatter(Xccd, Yccd, marker="o", color="DarkBlue", s=1)
+        ax1.scatter(df_SIM["X3"].values, df_SIM["Y3"], marker="o", color="red", s=50)
+        ax1.grid()
+        ax1.set_aspect("equal")
+        ax1.set_xlabel("Xccd mm")
+        ax1.set_ylabel("Yccd mm")
+        ax1.set_title(" Random beam on CCD")
 
-    ax1.scatter(Xccd, Yccd, marker="o", color="DarkBlue", s=1)
-    ax1.scatter(df_SIM["X3"].values, df_SIM["Y3"], marker="o", color="red", s=50)
-    ax1.grid()
-    ax1.set_aspect("equal")
-    ax1.set_xlabel("Xccd mm")
-    ax1.set_ylabel("Yccd mm")
-    ax1.set_title(" Random beam on CCD")
-
-    ax2.hist2d(Xccd, Yccd, bins=(NBINX, NBINY), cmap=cm.get_cmap('jet', 512))
-    ax2.set_aspect("equal")
-    ax2.set_xlabel("Xccd mm")
-    ax2.set_ylabel("Yccd mm")
-    ax2.set_title(" Random beam on CCD")
-    plt.show()
+        ax2.hist2d(Xccd, Yccd, bins=(NBINX, NBINY), cmap=cm.get_cmap('jet', 512))
+        ax2.set_aspect("equal")
+        ax2.set_xlabel("Xccd mm")
+        ax2.set_ylabel("Yccd mm")
+        ax2.set_title(" Random beam on CCD")
+        plt.show()
 
 
 # save beam
@@ -355,6 +373,9 @@ df_out["Yccd_400"] = all_Yccd[0]
 df_out["Yccd_600"] = all_Yccd[1]
 df_out["Yccd_800"] = all_Yccd[2]
 df_out["Yccd_1000"] = all_Yccd[3]
+
+
+print(df_out)
 
 df_out.to_csv(outputdata_csv)
 
